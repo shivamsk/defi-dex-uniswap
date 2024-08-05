@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract CustomToken is ERC20 {
+contract CustomTokenERC20 is ERC20 {
     constructor(string memory name, string memory symbol) ERC20(name, symbol){
         _mint(msg.sender, 10000000 * 10 ** 18 ); 
     }    
@@ -17,7 +17,7 @@ contract CustomDex {
     // map to maintain the token and it's instances 
     mapping(string => ERC20) public tokenInstanceMap;
 
-    uint256 ethVaue = 100000000000000;
+    uint256 ethValue = 100000000000000;
 
     struct History {
         uint256 historyId; 
@@ -32,18 +32,18 @@ contract CustomDex {
     mapping(uint256 => History) private histories; 
 
     constructor(){
-        for(int i = 0; i < tokens.length ; i++){
-            CustomToken token = new CustomToken(tokens[i], tokens[i]);
+        for(uint256 i = 0; i < tokens.length ; i++){
+            CustomTokenERC20 token = new CustomTokenERC20(tokens[i], tokens[i]);
             tokenInstanceMap[tokens[i]] = token; 
         }
     }
 
     function getBalance(string memory tokenName, address _address) public view returns (uint256) {
-        return tokenInstanceMap[token].balanceOf[_address];
+        return tokenInstanceMap[tokenName].balanceOf(_address);
     }
 
     function getTotalSupply(string memory tokenName) public view returns (uint256) {
-        return tokenInstanceMap[tokenName].totaSupply();
+        return tokenInstanceMap[tokenName].totalSupply();
     }
 
     function getName(string memory tokenName) public view returns (string memory){
@@ -58,7 +58,7 @@ contract CustomDex {
         return address(this).balance;
     }
 
-    function _transactionHistory(string memory tokenName, string memory etherToken, uint256 inputVaue, uint256 outputVaue) internal {
+    function _transactionHistory(string memory tokenName, string memory etherToken, uint256 inputValue, uint256 outputValue) internal {
         _historyIndex++;
         uint256 historyId = _historyIndex; 
         History storage history = histories[historyId];
@@ -68,18 +68,18 @@ contract CustomDex {
         history.tokenA = tokenName;
         history.tokenB = etherToken; 
         history.inputValue = inputValue; 
-        history.outputVaue = outputVaue;         
+        history.outputVaue = outputValue;         
     }
 
     function swapEthToToken(string memory tokenName) public payable returns (uint256) {
-        uint256 inputVaue = msg.value;
-        uint256 outputValue = (inputVaue / ethVaue) * 10 ** 18;
+        uint256 inputValue = msg.value;
+        uint256 outputValue = (inputValue / ethValue) * 10 ** 18;
 
         require(tokenInstanceMap[tokenName].transfer(msg.sender, outputValue));
 
         string memory etherToken = "Ether";
 
-        _transactionHistory(tokenName, etherToken, inputVaue, outputValue );
+        _transactionHistory(tokenName, etherToken, inputValue, outputValue );
 
         return outputValue;   
     }
@@ -108,15 +108,18 @@ contract CustomDex {
         _transactionHistory(srcTokenName, destTokenName, amount, amount); 
     }
 
-    function getAllHistory() public view return (History[] memory){
+    function getAllHistory() public view returns (History[] memory){
         uint256 itemCount= _historyIndex; 
 
         uint256 currentIndex = 0; 
 
         History[] memory items = new History[](itemCount);
 
-        for(int i = 1 ; i <= itemCount; i++){
-            items[i] = histories[i];
+        for(uint256 i = 0 ; i < itemCount; i++){
+            uint256 currentId = i + 1; 
+            History storage currentItem = histories[currentId];
+            items[currentIndex] = currentItem;
+            currentIndex += 1; 
         }
 
         return items;
